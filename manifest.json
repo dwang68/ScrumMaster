@@ -1,0 +1,12 @@
+{
+  "name": "Scrum Master",
+  "description": "My first Chrome App.",
+  "version": "0.1",
+  "manifest_version": 2,
+  "app": {
+    "background": {
+      "scripts": ["./public/javascripts/background.js"]
+    }
+  },
+  "icons": { "16": "./public/images/icon_16.png", "128": "./public/images/icon_128.png" }
+}
