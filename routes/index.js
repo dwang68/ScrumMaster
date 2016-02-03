@@ -31,7 +31,7 @@ router.get('/cookie-authenticate', function (req, res) {
 	var loginArgs = {
 	    data: {
 	            "username": "Dalin.Wang@sonos.com",
-	            "password": "dw12345DW$"
+	            "password": "dw12345DW%"
 	    },
 	    headers: {
 	            "Content-Type": "application/json"
@@ -52,14 +52,15 @@ router.get('/cookie-authenticate', function (req, res) {
 	                        },
 	                        data: {
 									// Provide additional data for the JIRA search. You can modify the JQL to search for whatever you want.
-	                                jql: "type=Bug AND status=Closed"
+	                                jql: 'type=Story AND status=Open AND Team=DEVX-Dev-Content AND "Story Points"=null AND project="Developer Experience Backlog" AND Sprint="2016 DevContent - Sprint 5"'
+	                        		
 	                        }
 	                };
 					// Make the request return the search results, passing the header information including the cookie.
 	                client.post("https://jira.sonos.com/rest/api/2/search", searchArgs, function(searchResult, response) {
 	                        console.log('status code:', response.statusCode);
 	                        console.log('search result:', searchResult);
-	                        res.json(searchResult);
+	                        res.json(searchResult.issues[0].fields.summary + searchResult.issues[0].fields.description);
 	                });
 	        }
 	        else {
@@ -76,7 +77,7 @@ router.get('/listjson', function (req, res) {
 router.get('/basic-authenticate', function (req, res) {
 
 	var username = 'Dalin.Wang@sonos.com',
-	    password = 'dw12345DW$';
+	    password = 'dw12345DW%';
 	var options = {
 	   host: 'jira.sonos.com',
 	   port: 443,
