@@ -1,38 +1,39 @@
-var storyCount = 0;
+function Story(theKey, theSummary, theDescription) {
+	this.key = theKey;
+	this.points = [];
+	this.summary = theSummary;
+	this.description = theDescription;
+	this.average = 0;
+}
 
-var Story = function () {
-	storyCount++;
-	this.data = {
-		identifier: null,
-		point: null,
-		summary: null,
-		description: null,
-		reporter: null,
-		assigner: null,
-		dateOfCreation: null
-	};
-
-	this.fill = function (info) {
-		for(var prop in this.data) {
-			if(this.data[prop] !== 'undefined') {
-				this.data[prop] = info[prop];
-			}
+Story.prototype = {
+	constructor: Story,
+	getKey:function() {
+		return this.key;
+	},
+	getPoints:function() {
+		return this.points;
+	},
+	getSummary:function() {
+		return this.summary;
+	},
+	getDescription:function() {
+		return this.description;
+	},
+	getAverage:function() {
+		this.average = 0;
+		for(i = 0; i < this.points.length; i++){
+			this.average += this.points[i];
 		}
-	};
+		return (this.average/this.points.length);
+	},
+	savePoint:function(thePointToAdd) {
+		this.points.push(thePointToAdd);
+	},
+	showStoryInfo:function() {
+		var info = this.key + ": " + this.summary + "\n  " + this.description;
+		return info;
+	}
+}
 
-	this.getInformation = function () {
-		return this.data;
-	};
-
-};
-
-exports.create = function (info) {
-
-	var instance = new Story();
-	instance.fill(info);
-	return instance;
-};
-
-exports.getCount = function() {
-	return storyCount;
-};
+module.exports = Story;

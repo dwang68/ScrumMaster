@@ -7,6 +7,9 @@ var express = require('express');
 var cors = require('cors');
 var router = express.Router();
 var jira_interface = require('../jira');
+var Story = require('../story');
+var User = require('../user/user.js');
+var Master = require('../user/master.js');
 const https = require('https');
 
 exports.router = router.get('/', function (req, res) {
@@ -20,6 +23,14 @@ router.get('/helloWorld', cors(), function (req, res) {
 
 router.get('/view', function (req, res) {
   res.render('index.jade', { title: 'Hey', message: 'Hello there!'});
+});
+
+
+router.get('/session', function (req, res) {
+	var master = new Master("dalin", "myjiraid", "asdfaaaf");
+	var user = new User("dalin", false);
+	var SampleStory = new Story("DEVX-3328", "Sample Story", "create a sample story!");
+	res.send(master.showUserInfo());
 });
 
 router.get('/cookie-authenticate', function (req, res) {
