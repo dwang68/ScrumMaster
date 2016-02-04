@@ -13,8 +13,7 @@ Master.prototype = {
 	constructor: Master,
 	showMasterInfo:function() {
 		var info;
-		info = "Scrum Master " +  this.name +  "has jiraID: " + this.jiraID + "and jira password: " + this.password;
-	
+		info = "Scrum Master " +  this.name +  "has jiraID: " + this.jiraID + "and jira password: " + this.password;	
 		return info;
 	}
 }
