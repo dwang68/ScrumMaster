@@ -1,7 +1,9 @@
-function Session(theSessionID) {
+function Session(theSessionID, theFrom, theTo) {
 	this.sessionID = theSessionID;
 	this.users = [];
 	this.stories = [];
+	this.from = theFrom;
+	this.to = theTo;
 }
 
 Session.prototype = {
