@@ -1,17 +1,19 @@
 const https = require('https');
-	
-var cookie_authenticate = function(req, res, jiraID, password) {
-		console.log("in LOGIN");
+var storiesModel = require('../models/stories.js');
+var usersModel = require('../models/users.js');
+var sessionsModel = require('../models/sessions.js');
+var pointingModel = require('../models/pointing.js');
+// load all files in models dir
+var util = require('util');
+var jira = require('../jira');
+
+var cookie_authenticate = function(jiraID, password, sessionID, callback) {
+		
 	var Client = require('node-rest-client').Client;
-		console.log("in LOGIN1");
 	client = new Client();
 	// Provide user credentials, which will be used to log in to JIRA.
-
-
 	var loginArgs = {
 	    data: {
-	            // "username": "Dalin.Wang@sonos.com",
-	            // "password": "dw12345DW%"
 	            "username": jiraID,
 	            "password": password
 	    },
@@ -19,38 +21,23 @@ var cookie_authenticate = function(req, res, jiraID, password) {
 	            "Content-Type": "application/json"
 	    } 
 	};
-		console.log("in LOGIN2");
-
+		
 
 	client.post("https://jira.sonos.com/rest/auth/1/session", loginArgs, function(data, response){
 	        if (response.statusCode == 200) {
 	                console.log('succesfully logged in, session:', data.session);
-	                var session = data.session;
-	                // Get the session information and store it in a cookie in the header
-	                var searchArgs = {
-	                        headers: {
-									// Set the cookie from the session information
-	                                cookie: session.name + '=' + session.value,
-	                                "Content-Type": "application/json"
-	                        },
-	                        data: {
-									// Provide additional data for the JIRA search. You can modify the JQL to search for whatever you want.
-	                                jql: 'type=Story AND status=Open AND Team=DEVX-Dev-Content AND "Story Points"=null AND project="Developer Experience Backlog" AND Sprint="2016 DevContent - Sprint 5"'
-	                        		
-	                        }
-	                };
-					// Make the request return the search results, passing the header information including the cookie.
-	                client.post("https://jira.sonos.com/rest/api/2/search", searchArgs, function(searchResult, response) {
-	                        console.log('status code:', response.statusCode);
-	                        console.log('search result:', searchResult);
-
-	                        res.json(searchResult.issues[0].fields.summary + searchResult.issues[0].fields.description);
-	                });
-	        }
-	        else {
+	                var jiraSession = data.session;
+	                // Update the session record by adding jiraSession cookie info
+	                sessionsModel.findByIdAndUpdate(sessionID, { $set: { jiraCookie: jiraSession.name + '=' + jiraSession.value}}, function (err, doc) {
+  						if (err) {return console.log(err);}
+  						callback();
+					});				
+	        
+	        }else {
 	                throw "Login failed :(";
 	        }
 	});
+
 }
 
 var basic_authenticate = function(req, res) {
