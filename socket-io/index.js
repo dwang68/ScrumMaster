@@ -30,6 +30,23 @@ module.exports.listen = function(app){
 				});
 				
 			});
+
+			socket.on("storySelect", function(data) {
+				var jsonData = JSON.parse(data);
+				var sessionID = jsonData['sessionID'];
+				var key = jsonData['key'].replace(/['"]+/g, '');
+				storiesModel.find({key: key, sessionID: sessionID}, '_id key summary description', function(err, doc) {
+					if (err) return handleError(err);
+					
+					sessionsModel.update({_id: sessionID}, { $set: { currentStory: doc[0]._id }}, function (err, raw) {
+  						if (err) return handleError(err);
+  						console.log('The raw response from Mongo was ', raw);
+  						socket.emit("storySelectResponse", "storySelectResponse");
+  						socket.to(sessionID).emit("storySelectResponse", "storySelectResponse(room)");
+					});
+					
+	        	});
+			});
 			
 			socket.on("clientLogin", function(data){
 				
@@ -88,6 +105,7 @@ module.exports.listen = function(app){
 					}else if(isScrumMaster !== "on" && sessionExistsInMongoDB ){
 						var userName = data['name'];
 						var sessionID = data['sessionID'];
+						socket.join(sessionID);
 						var userRecord = new usersModel({name: userName, isScrumMaster: false, sessionID: sessionID})
 								
 								userRecord.save(function(err, userRecord){
