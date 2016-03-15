@@ -35,14 +35,14 @@ module.exports.listen = function(app){
 				var jsonData = JSON.parse(data);
 				var sessionID = jsonData['sessionID'];
 				var key = jsonData['key'].replace(/['"]+/g, '');
-				storiesModel.find({key: key, sessionID: sessionID}, '_id key summary description', function(err, doc) {
+				storiesModel.findOne({key: key, sessionID: sessionID}, '_id key summary description', function(err, doc) {
 					if (err) return handleError(err);
-					
-					sessionsModel.update({_id: sessionID}, { $set: { currentStory: doc[0]._id }}, function (err, raw) {
+					console.log('findOne: ', util.inspect(doc, false, null));
+					sessionsModel.update({_id: sessionID}, { $set: { currentStory: doc._id }}, function (err, raw) {
   						if (err) return handleError(err);
-  						console.log('The raw response from Mongo was ', raw);
-  						socket.emit("storySelectResponse", "storySelectResponse");
-  						socket.to(sessionID).emit("storySelectResponse", "storySelectResponse(room)");
+ 						console.log('In update to sessionID ' + sessionID + ' : ', util.inspect(doc, false, null));
+  						socket.emit("storySelectResponse", JSON.stringify(doc));
+  						socket.to(sessionID).emit("storySelectResponse", JSON.stringify(doc));
 					});
 					
 	        	});
