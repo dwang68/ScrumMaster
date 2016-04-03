@@ -8,6 +8,7 @@ var pointingModel = require('../models/pointing.js');
 const default_sprint = 	"2016 DevContent - ";
 const default_jql = 'type=Story AND status=Open AND Team=DEVX-Dev-Content AND "Story Points"=null AND project="Developer Experience Backlog" AND Sprint=';
 var jira = require('../jira');
+var isPointing = false;
 
 
 module.exports.listen = function(app){
@@ -18,6 +19,25 @@ module.exports.listen = function(app){
 			// Retrieving required parameters from socket handshake
 			console.log("Clinet says hi");
 			socket.emit("serverhi", "Server says hi");
+
+			socket.on("isPointing", function(data) {
+				var jsonData = JSON.parse(data);
+				console.log("in isPointing" + data);
+				var sessionID = jsonData['sessionID'];
+				var status = jsonData['status'];
+				console.log(sessionID + ": " + status);
+				if(status){
+					console.log("in startPointing");
+					socket.emit("isPointingResponse", "startPointing");
+					socket.to(sessionID).emit("isPointingResponse", "startPointing");
+					isPointing = true;
+				}else{
+					console.log("in stopPointing");
+					socket.emit("isPointingResponse", "stopPointing");
+					socket.to(sessionID).emit("isPointingResponse", "stopPointing");
+					isPointing = false;
+				}
+			});
 
 			socket.on("sprintSelect", function(data) {
 				var jsonData = JSON.parse(data);
@@ -35,6 +55,7 @@ module.exports.listen = function(app){
 				var jsonData = JSON.parse(data);
 				var sessionID = jsonData['sessionID'];
 				var key = jsonData['key'].replace(/['"]+/g, '');
+				
 				storiesModel.findOne({key: key, sessionID: sessionID}, '_id key summary description', function(err, doc) {
 					if (err) return handleError(err);
 					console.log('findOne: ', util.inspect(doc, false, null));
