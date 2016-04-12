@@ -1,6 +1,7 @@
 var socketio = require('socket.io');
 var authentication = require('../authentication');
 var util = require('util');
+var mongoose = require('mongoose');
 var storiesModel = require('../models/stories.js');
 var usersModel = require('../models/users.js');
 var sessionsModel = require('../models/sessions.js');
@@ -19,6 +20,19 @@ module.exports.listen = function(app){
 			// Retrieving required parameters from socket handshake
 			console.log("Clinet says hi");
 			socket.emit("serverhi", "Server says hi");
+			
+			// Stores point based on sessionID, userID and storyID
+			socket.on("storyPointing", function(data) {
+				var jsonData = JSON.parse(data);
+				var sessionID = jsonData['sessionID'];
+				var userId = mongoose.mongo.ObjectId(jsonData['userID']);
+				var storyId = mongoose.mongo.ObjectId(jsonData['storyID']);
+				var storyPts = Number(jsonData['storyPts']);
+				var pointingRecord = new pointingModel({uid: userId, sid: storyId, sessionID: sessionID, pt: storyPts});
+				pointingRecord.save(function(err, pointingRecord) {
+					socket.emit("storyPointingResponse", "thanks for Pointing");
+				});
+			});
 
 			socket.on("isPointing", function(data) {
 				var jsonData = JSON.parse(data);
@@ -26,16 +40,44 @@ module.exports.listen = function(app){
 				var sessionID = jsonData['sessionID'];
 				var status = jsonData['status'];
 				console.log(sessionID + ": " + status);
-				if(status){
-					console.log("in startPointing");
+				if(status){				
 					socket.emit("isPointingResponse", "startPointing");
 					socket.to(sessionID).emit("isPointingResponse", "startPointing");
 					isPointing = true;
 				}else{
-					console.log("in stopPointing");
 					socket.emit("isPointingResponse", "stopPointing");
 					socket.to(sessionID).emit("isPointingResponse", "stopPointing");
 					isPointing = false;
+					//TODO: Send responses of story statistics to all members and scrum master
+					sessionsModel.findOne({_id: sessionID}, 'currentStory', function(err, doc) {
+						console.log("doc: " + util.inspect(doc, false, null));
+						pointingModel
+						.find({sid: doc.currentStory, sessionID: sessionID})
+						.populate('uid')
+						.populate('sid')
+						.exec(function (err, docs) {
+							if (err) return handleError(err);
+							for(var index = 0; index < docs.length; ++index) {
+								console.log("user: " + docs[index].uid.userName + " pt: " + docs[index].pt + " story: " + docs[index].sid.key);
+							}
+						});
+						//pointingModel.find({sid: doc.currentStory, sessionID: sessionID}, 'uid pt', function(err, docs) {
+							//console.log("docs in pointingModel: " + util.inspect(docs, false, null));
+
+							//loop over the docs and create an array of dictionary of userName and pt
+							// var theUserPoints = [];
+							// for(var index = 0; index < docs.length; ++index) {
+							// 	var userID = docs[index].uid;
+							// 	var userPt = docs[index].pt;
+							// 	usersModel.findOne({_id: userID, sessionID: sessionID}, 'userName', function(err, userRecord){
+							// 		var theUserName = userRecord.userName;
+							// 		theUserPoints[index] = {theUserName: userPt};
+							// 		console.log("TheUserPointsArray： " + index + " " + util.inspect(theUserPoints, false, null));
+							// 	});
+							// }
+							// console.log("TheUserPointsArray： " + util.inspect(theUserPoints, false, null));
+						//});
+					});
 				}
 			});
 
@@ -55,7 +97,7 @@ module.exports.listen = function(app){
 				var jsonData = JSON.parse(data);
 				var sessionID = jsonData['sessionID'];
 				var key = jsonData['key'].replace(/['"]+/g, '');
-				
+
 				storiesModel.findOne({key: key, sessionID: sessionID}, '_id key summary description', function(err, doc) {
 					if (err) return handleError(err);
 					console.log('findOne: ', util.inspect(doc, false, null));
@@ -72,6 +114,7 @@ module.exports.listen = function(app){
 			socket.on("clientLogin", function(data){
 				
 				var sessionID = data['sessionID'];
+				var userID;
 				socket.join(sessionID);
 				var sessionExistsInMongoDB = false;
 				console.log("sessionID value: " + sessionID);
@@ -99,17 +142,18 @@ module.exports.listen = function(app){
 								if(err) { return console.error(err + "errorA");}
 								console.log(util.inspect(sessionRecord, false, null));
 								//After sessionRecord is saved, save userRecord
-								var userRecord = new usersModel({name: userName, isScrumMaster: true, jiraID: jiraID, password: password, sessionID: sessionID})
+								var userRecord = new usersModel({userName: userName, isScrumMaster: true, jiraID: jiraID, password: password, sessionID: sessionID})
 								
 								userRecord.save(function(err, userRecord){
 									if(err) {return console.error(err + "errorB");}
 									console.log(util.inspect(userRecord, false, null));
+									userID = userRecord._id.toString();
 									//After userRecord is saved, authenticate scrum master with jira credentials
 									authentication.cookie_authenticate(jiraID, password, sessionID, function(){
 										sessionsModel.findById(sessionID, 'jiraCookie',  function (err, doc){
 										if (err) {return console.log(err + "errorC");}
 										console.log("server is about to send response to clientLogin" + doc.jiraCookie);
-										socket.emit("clientLoginResponse" , doc.jiraCookie);
+										socket.emit("clientLoginResponse" , JSON.stringify({"userID": userID}));
 										});
 									});		
 								});
@@ -127,12 +171,13 @@ module.exports.listen = function(app){
 						var userName = data['name'];
 						var sessionID = data['sessionID'];
 						socket.join(sessionID);
-						var userRecord = new usersModel({name: userName, isScrumMaster: false, sessionID: sessionID})
+						var userRecord = new usersModel({userName: userName, isScrumMaster: false, sessionID: sessionID});
 								
-								userRecord.save(function(err, userRecord){
-									if(err) {return console.error(err);}
-									console.log(util.inspect(userRecord, false, null));	
-								});							
+						userRecord.save(function(err, userRecord){
+							if(err) {return console.error(err);}
+							console.log(util.inspect(userRecord, false, null));	
+							socket.emit("clientLoginResponse", JSON.stringify({"userID": userRecord._id.toString()}));
+						});							
 						console.log("Return the current story for scrum user to point");
 
 

@@ -31,7 +31,7 @@ var search = function(sessionID, jql_param, sprint, callback) {
 	    console.log('jql: ' + jql_param);
 		// Make the request return the search results, passing the header information including the cookie.
 	    client.post("https://jira.sonos.com/rest/api/2/search", searchArgs, function(searchResult, response) {   
-	    	console.log("searchResults: " + searchResult.issues);
+	    	//console.log("searchResults: " + searchResult.issues);
 	        insertStories(searchResult.issues, function() {
 	        	storiesModel.find({sessionID: theSessionID, sprint: theSprint}, 'key summary description', function(err, docs) {
 					console.log("after insertion: %s", docs);
@@ -51,42 +51,21 @@ function editPoint(){
 function insertStories(issues, callback) {
 	var length = issues.length;
 	var inserted = 0;
+	console.log("orange");
 	for (index = 0; index < length; ++index) {
+		console.log("plum");
 		var issue = issues[index];
     	var storyRecord = new storiesModel({key: issue.key, summary: issue.fields.summary, 
     		description: issue.fields.description, isPointed: false, sprint: theSprint, sessionID: theSessionID });
     	storyRecord.save(function(err, doc) {
 			if(err) {return console.error(err);}
 			if (++inserted == length) {
+				console.log("pear");
         		callback();
       		}
     	});
 	}
 }
-
-// function insertStoriesCallback() {
-// 	storiesModel.find({sessionID: theSessionID, sprint: theSprint}, '_id summary description', function(err, docs) {
-// 	console.log("after insertion: %s", docs);
-// 	});
-// }
-
-
-// function insertStories(issues, insertStoriesCallback) {
-// 	var length = issues.length;
-// 	var inserted = 0;
-// 	for (index = 0; index < length; ++index) {
-// 		var issue = issues[index];
-//     	var storyRecord = new storiesModel({_id: issue.key, summary: issue.fields.summary, 
-//     		description: issue.fields.description, isPointed: false, sprint: theSprint, sessionID: theSessionID });
-//     	storyRecord.save(function(err, doc) {
-// 			if(err) {return console.error(err);}
-// 			if (++inserted == length) {
-//         		insertStoriesCallback();
-//       		}
-//     	});
-// 	}
-// }
-
 
 
 module.exports.search = search;
