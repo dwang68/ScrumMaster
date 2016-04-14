@@ -13,6 +13,27 @@ var isPointing = false;
 
 
 module.exports.listen = function(app){
+	function standardDeviation(values, avg){
+  		var squareDiffs = values.map(function(value){
+   	    var diff = value - avg;
+        var sqrDiff = diff * diff;
+    	return sqrDiff;
+  		});
+  
+  		var avgSquareDiff = average(squareDiffs);
+
+  		var stdDev = Math.sqrt(avgSquareDiff);
+  		return stdDev;
+	}
+
+	function average(data){
+  		var sum = data.reduce(function(sum, value){
+    	return sum + value;}, 0);
+
+  		var avg = sum / data.length;
+  		return avg;
+	}
+
 	var io = socketio.listen(app);
 
 	var login = io.of('/socketio')
@@ -45,8 +66,8 @@ module.exports.listen = function(app){
 					socket.to(sessionID).emit("isPointingResponse", "startPointing");
 					isPointing = true;
 				}else{
-					socket.emit("isPointingResponse", "stopPointing");
-					socket.to(sessionID).emit("isPointingResponse", "stopPointing");
+					var highest = -1, lowest = 100, avg = 0.0, deviation = 0.0;
+					var ptsList = [];
 					isPointing = false;
 					//TODO: Send responses of story statistics to all members and scrum master
 					sessionsModel.findOne({_id: sessionID}, 'currentStory', function(err, doc) {
@@ -58,25 +79,19 @@ module.exports.listen = function(app){
 						.exec(function (err, docs) {
 							if (err) return handleError(err);
 							for(var index = 0; index < docs.length; ++index) {
+								var pt = parseInt(docs[index].pt)
+								avg += pt;
+								if (highest < pt) { highest = pt}
+								if (lowest > pt) {lowest = pt}
+								ptsList[index] = pt;
 								console.log("user: " + docs[index].uid.userName + " pt: " + docs[index].pt + " story: " + docs[index].sid.key);
 							}
+							avg /= docs.length;
+							deviation = standardDeviation(ptsList, avg);
+							console.log(avg + " " + deviation + " " + highest + " " + lowest);
+							socket.emit("isPointingResponse", JSON.stringify({"avg": avg, "deviation": deviation, "highest": highest, "lowest": lowest}));
+							socket.to(sessionID).emit("isPointingResponse", JSON.stringify({"avg": avg, "deviation": deviation, "highest": highest, "lowest": lowest}));
 						});
-						//pointingModel.find({sid: doc.currentStory, sessionID: sessionID}, 'uid pt', function(err, docs) {
-							//console.log("docs in pointingModel: " + util.inspect(docs, false, null));
-
-							//loop over the docs and create an array of dictionary of userName and pt
-							// var theUserPoints = [];
-							// for(var index = 0; index < docs.length; ++index) {
-							// 	var userID = docs[index].uid;
-							// 	var userPt = docs[index].pt;
-							// 	usersModel.findOne({_id: userID, sessionID: sessionID}, 'userName', function(err, userRecord){
-							// 		var theUserName = userRecord.userName;
-							// 		theUserPoints[index] = {theUserName: userPt};
-							// 		console.log("TheUserPointsArray： " + index + " " + util.inspect(theUserPoints, false, null));
-							// 	});
-							// }
-							// console.log("TheUserPointsArray： " + util.inspect(theUserPoints, false, null));
-						//});
 					});
 				}
 			});
