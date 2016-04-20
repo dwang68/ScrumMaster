@@ -49,10 +49,21 @@ module.exports.listen = function(app){
 				var userId = mongoose.mongo.ObjectId(jsonData['userID']);
 				var storyId = mongoose.mongo.ObjectId(jsonData['storyID']);
 				var storyPts = Number(jsonData['storyPts']);
-				var pointingRecord = new pointingModel({uid: userId, sid: storyId, sessionID: sessionID, pt: storyPts});
-				pointingRecord.save(function(err, pointingRecord) {
-					socket.emit("storyPointingResponse", "thanks for Pointing");
+				pointingModel.find({uid: userId, sid: storyId, sessionID: sessionID}, 'pt', function(err, docs) {
+					if(docs.length > 0) {
+						pointingModel.update({uid: userId, sid: storyId, sessionID: sessionID}, { $set: { pt: storyPts }}, function (err, raw) {
+  						if (err) return handleError(err);
+  						console.log("update the point this time");
+					});
+					}else{
+						var pointingRecord = new pointingModel({uid: userId, sid: storyId, sessionID: sessionID, pt: storyPts});
+						pointingRecord.save(function(err, pointingRecord) {
+							if (err) return handleError(err);
+							console.log("pointing the first time");
+						});
+					}
 				});
+				
 			});
 
 			socket.on("isPointing", function(data) {
