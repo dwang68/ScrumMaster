@@ -155,15 +155,24 @@ module.exports.listen = function(app){
 	    			console.log("b sessionID value: " + sessionID);
 					console.log("b sessionID type: " + (typeof sessionID));
 		 
-					if(isScrumMaster === "on"){
+					if(isScrumMaster === "on" && !sessionExistsInMongoDB){
 						// if the sessionID does not exist in the mongoDB
 						jiraID = data['jiraID'];
 						password = data['password'];
-						if(!sessionExistsInMongoDB) {
-							//Save sessionRecord with sessionID
-							console.log("c sessionID value: " + sessionID);
-							console.log("c sessionID type: " + (typeof sessionID));
-							var sessionRecord = new sessionsModel({ _id: sessionID});
+						
+						//Save sessionRecord with sessionID
+						console.log("c sessionID value: " + sessionID);
+						console.log("c sessionID type: " + (typeof sessionID));
+						
+						
+								
+						authentication.cookie_authenticate(jiraID, password, sessionID, function(err, jiraCookie){
+							if(err) {
+								socket.emit("clientLoginResponse", JSON.stringify({"error": "Dear Scrum team master: your JIRA credentials are invalid"}));
+								return console.error(err);
+							}
+							
+							var sessionRecord = new sessionsModel({ _id: sessionID, jiraCookie: jiraCookie});
 							sessionRecord.save(function(err, sessionRecord){
 								if(err) { return console.error(err + "errorA");}
 								console.log(util.inspect(sessionRecord, false, null));
@@ -174,25 +183,17 @@ module.exports.listen = function(app){
 									if(err) {return console.error(err + "errorB");}
 									console.log(util.inspect(userRecord, false, null));
 									userID = userRecord._id.toString();
-									//After userRecord is saved, authenticate scrum master with jira credentials
-									authentication.cookie_authenticate(jiraID, password, sessionID, function(){
-										sessionsModel.findById(sessionID, 'jiraCookie',  function (err, doc){
-										if (err) {return console.log(err + "errorC");}
-										console.log("server is about to send response to clientLogin" + doc.jiraCookie);
-										socket.emit("clientLoginResponse" , JSON.stringify({"userID": userID}));
-										});
-									});		
+									socket.emit("clientLoginResponse" , JSON.stringify({"userID": userID}));
 								});
-
-							});
+							});		
+						});
 						
-						}else{
-							//If the sessionID already exists in the mongoDB, redirect the scrum master to login
-							console.log("The sessionID already exists, scrum master should login with a different sessionID to create a new sesssion");
-						}
-
-
-
+					}else if (isScrumMaster === "on" && sessionExistsInMongoDB){
+						//If the sessionID already exists in the mongoDB, redirect the scrum master to login
+						socket.emit("clientLoginResponse", 
+							JSON.stringify({ "error": "Dear Scrum team master: The session you entered has already been register. Please choose another sessionID"}));
+						console.log("The sessionID already exists, scrum master should login with a different sessionID to create a new sesssion");
+					
 					}else if(isScrumMaster !== "on" && sessionExistsInMongoDB ){
 						var userName = data['name'];
 						var sessionID = data['sessionID'];
@@ -208,6 +209,7 @@ module.exports.listen = function(app){
 
 
 					}else if(isScrumMaster !== "on" && !sessionExistsInMongoDB) {
+						socket.emit("clientLoginResponse", JSON.stringify({"error": "Dear Scrum team member: The session you entered does not exist"}));
 						console.log("The session does not exist, scrum member should ask Scrum Master for a valid sessionID");
 					}
 

@@ -27,14 +27,10 @@ var cookie_authenticate = function(jiraID, password, sessionID, callback) {
 	        if (response.statusCode == 200) {
 	                console.log('succesfully logged in, session:', data.session);
 	                var jiraSession = data.session;
-	                // Update the session record by adding jiraSession cookie info
-	                sessionsModel.findByIdAndUpdate(sessionID, { $set: { jiraCookie: jiraSession.name + '=' + jiraSession.value}}, function (err, doc) {
-  						if (err) {return console.log(err);}
-  						callback();
-					});				
+					callback(null, jiraSession.name + '=' + jiraSession.value);
 	        
 	        }else {
-	                throw "Login failed :(";
+	                callback(new Error('Invalid JIRA Credentials'), null);
 	        }
 	});
 
