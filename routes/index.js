@@ -10,8 +10,7 @@ var pointingModel = require('../models/pointing.js');
 var path = require('path');
 
 exports.router = router.get('/', cors(), function (req, res) {
-	res.sendFile(path.resolve(__dirname + '/../index2.html'));
-	//res.send("express");
+	res.send('Hello World!');
 });
 
 

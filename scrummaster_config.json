@@ -1,0 +1,6 @@
+{
+	"httpsCredentials": {
+    "keyFile": "scrummaster.key",
+    "certFile": "scrummaster.pem"
+  }
+}
