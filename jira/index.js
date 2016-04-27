@@ -4,11 +4,13 @@ var sessionsModel = require('../models/sessions.js');
 var pointingModel = require('../models/pointing.js');
 var response, request, theSessionID, theSprint;
 
+
 var search = function(sessionID, jql_param, sprint, callback) {
 	theSessionID = sessionID;
 	theSprint = sprint;
 
 	var jiraCookie;
+	
 	sessionsModel.findById(sessionID, 'jiraCookie',  function (err, doc){
 		if (err) {return console.log(err);}
 		jiraCookie = doc.jiraCookie;
@@ -43,8 +45,30 @@ var search = function(sessionID, jql_param, sprint, callback) {
 	});
 }
 
-function editPoint(){
+var editPoint = function(sessionID, storyKey, Points, callback) {
+	var jiraCookie;
+	sessionsModel.findById(sessionID, 'jiraCookie',  function (err, doc){
+		if (err) {return console.log(err);}
+		jiraCookie = doc.jiraCookie;
 
+		var updateArgs = {
+			headers: {
+				// Set the cookie from the session information
+	            cookie: jiraCookie,
+	            "Content-Type": "application/json"
+	        },
+	        data: {
+	        	"update" : { 
+					"customfield_10002" : [{"set" : Points}]
+				}
+	        }
+		};
+
+		client.put("https://jira.sonos.com/rest/api/2/issue/".concat(storyKey), updateArgs, function() {   
+	          callback("The point for story " + storyKey + " is updated");
+	    });
+	});
+		
 }
 
 

@@ -41,6 +41,18 @@ module.exports.listen = function(app){
 			// Retrieving required parameters from socket handshake
 			console.log("Clinet says hi");
 			socket.emit("serverhi", "Server says hi");
+
+
+			socket.on("editPoint", function(data) {
+				var jsonData = JSON.parse(data);
+				var sessionID = jsonData['sessionID'];
+				var storyKey = jsonData['storyKey'];
+				var storyPts = Number(jsonData['storyPts']);
+				jira.editPoint(sessionID, storyKey, storyPts, function(result) {
+					console.log(result);
+				});
+
+			});
 			
 			// Stores point based on sessionID, userID and storyID
 			socket.on("storyPointing", function(data) {

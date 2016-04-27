@@ -8,6 +8,7 @@ var usersModel = require('../models/users.js');
 var sessionsModel = require('../models/sessions.js');
 var pointingModel = require('../models/pointing.js');
 var path = require('path');
+var jira = require('../jira');
 
 exports.router = router.get('/', cors(), function (req, res) {
 	res.send('Hello World!');
@@ -30,6 +31,8 @@ router.get('/view', function (req, res) {
 router.get('/basic-authenticate', function (req, res) {
 	authentication.basic_authenticate(req, res);
 });
+
+
 
 
 
