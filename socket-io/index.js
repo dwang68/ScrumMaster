@@ -214,8 +214,28 @@ module.exports.listen = function(app){
 								
 						userRecord.save(function(err, userRecord){
 							if(err) {return console.error(err);}
-							console.log(util.inspect(userRecord, false, null));	
-							socket.emit("clientLoginResponse", JSON.stringify({"userID": userRecord._id.toString()}));
+							console.log(util.inspect(userRecord, false, null));
+							// get the current story id if it exists
+							sessionsModel.findOne({_id: sessionID}, "currentStory", function(error, doc) {
+								if(err) {return console.error(err + "errorD");}			
+								if(doc !== null && doc.currentStory !== null) {
+									console.log("There is a currentStory");
+									storiesModel.findOne({_id: doc.currentStory}, "_id key summary description", function(err, raw) {
+										if(err) {return console.error(err + "errorE");}
+										if(raw) {
+											console.log("There is a currentStory B");
+											socket.emit("clientLoginResponse", JSON.stringify({"userID": userRecord._id.toString(), "_id" : raw._id.toString(), 
+												"key" : raw.key, "summary" : raw.summary, "description" : raw.description}));
+										}else {
+											socket.emit("clientLoginResponse", JSON.stringify({"userID": userRecord._id.toString()}));
+										}			
+									});					
+								} else {
+									console.log("There is a currentStory Y");
+									socket.emit("clientLoginResponse", JSON.stringify({"userID": userRecord._id.toString()}));
+								}
+							});
+							
 						});							
 						console.log("Return the current story for scrum user to point");
 
