@@ -9,12 +9,15 @@ var debug = require('debug')('ScrumMaster:server');
 var http = require('http');
 var https = require('https');
 var scrummasterConfig = require('../scrummaster_config.json');
+var util = require('util');
+
 
 /**
  * Get port from environment and store in Express.
  */
 
 var port = normalizePort(process.env.PORT || '3000');
+console.log("PORT: " + util.inspect(process.env.PORT, false, null));
 var secureport;
 app.set('port', port);
 
@@ -35,7 +38,7 @@ server.on('listening', onListening);
 var io = require('../socket-io').listen(server);
 
 if(scrummasterConfig.httpsCredentials !== undefined) {
-    secureport = normalizePort(process.env.PORT || '3443');
+    secureport = normalizePort((process.env.PORT + 443)|| '3443');
     var options = {
         key  : fs.readFileSync(scrummasterConfig.httpsCredentials.keyFile),
         cert : fs.readFileSync(scrummasterConfig.httpsCredentials.certFile)
