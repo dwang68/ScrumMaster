@@ -109,7 +109,7 @@ function insertOrUpdateStoryHelper(issue, callback) {
         			callback();			 				
     			});
 			}
-		});
+	});
 }
 
 
