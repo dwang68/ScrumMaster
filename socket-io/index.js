@@ -8,6 +8,8 @@ var sessionsModel = require('../models/sessions.js');
 var pointingModel = require('../models/pointing.js');
 const default_sprint = 	"2016 DevContent - ";
 const default_jql = 'type=Story AND status=Open AND Team=DEVX-Dev-Content AND "Story Points"=null AND project="Developer Experience Backlog" AND Sprint=';
+//const default_sprint = "";
+//const default_jql = "type=Story AND status='To Do' AND 'Story Points'=null AND Sprint=";
 var jira = require('../jira');
 var isPointing = false;
 
@@ -123,7 +125,7 @@ module.exports.listen = function(app){
 				var jsonData = JSON.parse(data);
 				var sessionID = jsonData['sessionID'];
 				var sprint  = default_sprint.concat(jsonData['sprint']);
-				var jql = default_jql.concat('"' + sprint + '"');
+				var jql = default_jql.concat("\'" + sprint + "\'");
 			    jira.search(sessionID, jql, sprint, function(docs) {
 					console.log("sprintSelect:" + sessionID + " " + sprint);
 					socket.emit("sprintSelectResponse", docs);

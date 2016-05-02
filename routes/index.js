@@ -19,15 +19,6 @@ router.get('/view', function (req, res) {
   res.render('index.jade', { title: 'Hey', message: 'Hello there!'});
 });
 
-// router.post('/pointing', cors(), function(req, res) {
-// 	var sessionID = req.body['sessionID'];
-// 	var storyID = req.body['storyID'];
-// 	sessionsModel.update({_id: sessionID}, { $set: { currentStory: storyID }}, function (err, raw) {
-//   		if (err) return handleError(err);
-//   		console.log('The raw response from Mongo was ', raw);
-// 	});
-// });
-
 router.get('/basic-authenticate', function (req, res) {
 	authentication.basic_authenticate(req, res);
 });
