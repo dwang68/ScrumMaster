@@ -124,13 +124,19 @@ module.exports.listen = function(app){
 			socket.on("sprintSelect", function(data) {
 				var jsonData = JSON.parse(data);
 				var sessionID = jsonData['sessionID'];
-				var sprint  = default_sprint.concat(jsonData['sprint']);
-				var jql = default_jql.concat("\'" + sprint + "\'");
+				var sprintNumber = jsonData['sprint'];
+				var jql;
+				if(sprintNumber !== 'EMPTY') {
+					var sprint  = default_sprint.concat(sprintNumber);
+					jql = default_jql.concat("\'" + sprint + "\'");
+				} else {
+					jql = default_jql.concat(sprint);
+				}
+
 			    jira.search(sessionID, jql, sprint, function(docs) {
 					console.log("sprintSelect:" + sessionID + " " + sprint);
 					socket.emit("sprintSelectResponse", docs);
-				});
-				
+				});			
 			});
 
 			socket.on("storySelect", function(data) {
