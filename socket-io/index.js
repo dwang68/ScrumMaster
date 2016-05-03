@@ -130,7 +130,7 @@ module.exports.listen = function(app){
 					var sprint  = default_sprint.concat(sprintNumber);
 					jql = default_jql.concat("\'" + sprint + "\'");
 				} else {
-					jql = default_jql.concat(sprint);
+					jql = default_jql.concat(sprintNumber);
 				}
 
 			    jira.search(sessionID, jql, sprint, function(docs) {
