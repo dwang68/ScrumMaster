@@ -126,6 +126,7 @@ module.exports.listen = function(app){
 				var sessionID = jsonData['sessionID'];
 				var sprintNumber = jsonData['sprint'];
 				var jql, sprint;
+				
 				if(sprintNumber !== 'EMPTY') {
 					sprint  = default_sprint.concat(sprintNumber);
 					jql = default_jql.concat("\'" + sprint + "\'");
