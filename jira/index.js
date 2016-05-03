@@ -25,7 +25,8 @@ var search = function(sessionID, jql_param, sprint, callback) {
 	            },
 	            data: {
 						// Provide additional data for the JIRA search. You can modify the JQL to search for whatever you want.
-	                    jql: jql_param
+	                    jql: jql_param，
+	                    "maxResults": 20
 	            	    //jql: 'type=Story AND status=Open AND Team=DEVX-Dev-Content AND "Story Points"=null AND project="Developer Experience Backlog" AND Sprint=null'
 
 	            }
