@@ -125,11 +125,12 @@ module.exports.listen = function(app){
 				var jsonData = JSON.parse(data);
 				var sessionID = jsonData['sessionID'];
 				var sprintNumber = jsonData['sprint'];
-				var jql;
+				var jql, sprint;
 				if(sprintNumber !== 'EMPTY') {
-					var sprint  = default_sprint.concat(sprintNumber);
+					sprint  = default_sprint.concat(sprintNumber);
 					jql = default_jql.concat("\'" + sprint + "\'");
 				} else {
+					sprint = sprintNumber;
 					jql = default_jql.concat(sprintNumber);
 				}
 
