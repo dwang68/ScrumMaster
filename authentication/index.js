@@ -39,7 +39,7 @@ var cookie_authenticate = function(jiraID, password, sessionID, callback) {
 var basic_authenticate = function(req, res) {
 
 	var username = 'Dalin.Wang@sonos.com',
-	    password = 'dw12345DW%';
+	    password = '';
 	var options = {
 	   host: 'jira.sonos.com',
 	   port: 443,
